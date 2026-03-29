@@ -14,8 +14,8 @@ app = FastAPI(title="Text Summarizer App", description="Text Summarization using
 
 # Tokenize
 
-model = T5ForConditionalGeneration.from_pretrained("./saved_summary_model")
-tokenizer = T5Tokenizer.from_pretrained("./saved_summary_model")
+model = T5ForConditionalGeneration.from_pretrained("shubhamsaini21/text-summarizer-t5-custom")
+tokenizer = T5Tokenizer.from_pretrained("shubhamsaini21/text-summarizer-t5-custom")
 
 # Device
 
@@ -30,7 +30,7 @@ model.to(device)
 
 # Templating
 
-templates = Jinja2Templates(directory=".")
+templates = Jinja2Templates(directory="templates")
 
 #Input Schema for Dialogue => String
 
