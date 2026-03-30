@@ -14,8 +14,8 @@ app = FastAPI(title="Text Summarizer App", description="Text Summarization using
 
 # Tokenize
 
-model = T5ForConditionalGeneration.from_pretrained("t5-small")
-tokenizer = T5Tokenizer.from_pretrained("t5-small")
+model = T5ForConditionalGeneration.from_pretrained("./saved_summary_model")
+tokenizer = T5Tokenizer.from_pretrained("./saved_summary_model")
 
 # Device
 
