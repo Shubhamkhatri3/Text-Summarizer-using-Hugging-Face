@@ -4,3 +4,4 @@ transformers
 torch
 jinja2
 python-multipart
+PyPDF2
