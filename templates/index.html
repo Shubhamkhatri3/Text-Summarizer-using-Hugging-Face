@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Summarizer</title>
+    <title>AI Text Summarizer</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #FFF7ED;
             margin: 0;
             padding: 0;
-            background-color: #FFF7ED;
-            color: #333;
         }
+
         .container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #fff;
+            max-width: 650px;
+            margin: 40px auto;
+            background: white;
+            padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         h1 {
@@ -28,36 +29,45 @@
 
         h3 {
             text-align: center;
-            margin-top: -20px;
-            margin-bottom: 40px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            margin-top: -15px;
+            margin-bottom: 30px;
         }
 
         textarea {
+            width: 100%;
             height: 150px;
             padding: 10px;
-            border: 1px solid #ccc;
             border-radius: 5px;
-            font-size: 16px;
+            border: 1px solid #ccc;
+        }
+
+        select, input[type="file"] {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
         }
 
         button {
             background-color: #FB923C;
             color: white;
             border: none;
-            padding: 10px 15px;
-            font-size: 16px;
-            cursor: pointer;
+            padding: 10px;
             border-radius: 5px;
+            cursor: pointer;
         }
 
         button:hover {
             background-color: #F97316;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #888;
         }
 
         #summary-output {
@@ -65,67 +75,135 @@
             background: #FFEDD5;
             padding: 15px;
             border-radius: 5px;
-            border: 1px solid #ccc;
         }
 
-        #summary-heading {
-            margin-top: 0px;
-            margin-bottom: 0px;
+        .actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Text Summarizer</h1>
-        <h3>using HuggingFace Transformer</h3>
-        <p>Write or Paste your content below for quick summarization.</p>
 
-        <form id="summarization-form">
-            <textarea id="dialogue-input" placeholder="Enter your content here..." required></textarea>
-            <button type="submit">Summarize</button>
-        </form>
+<div class="container">
 
-        <div id="summary-output">
-            <h3 id="summary-heading">Content Summary</h3>
-            <p id="summary-text"></p>
+    <h1>AI Text Summarizer</h1>
+    <h3>Using Hugging Face Transformer</h3>
+
+    <!-- MODE -->
+    <div class="section">
+        <!-- <label><b>Select Summary Type:</b></label>
+        <select id="mode">
+            <option value="short">Short</option>
+            <option value="detailed" selected>Detailed</option>
+            <option value="bullets">Bullet Points</option>
+        </select> -->
+    </div>
+
+    <!-- TEXT INPUT -->
+    <div class="section">
+        <label><b>Enter Text:</b></label>
+        <textarea id="text-input" placeholder="Paste your text here..."></textarea>
+        <button onclick="summarizeText()">Summarize Text</button>
+    </div>
+
+    <div class="divider">OR</div>
+
+    <!-- PDF INPUT -->
+    <div class="section">
+        <label><b>Upload PDF:</b></label>
+        <input type="file" id="pdf-file" accept=".pdf">
+        <button onclick="summarizePDF()">Summarize PDF</button>
+    </div>
+
+    <!-- OUTPUT -->
+    <div id="summary-output">
+        <h3>Summary</h3>
+        <p id="summary-text"></p>
+
+        <div class="actions">
+            <button onclick="copyText()">Copy</button>
+            <button onclick="downloadText()">Download</button>
         </div>
     </div>
 
-    <script>
-        document.getElementById("summarization-form").addEventListener("submit", async (e) => {
-            e.preventDefault();
-        
-            const dialogueInput = document.getElementById("dialogue-input");
-            const summaryText = document.getElementById("summary-text");
-            const submitButton = e.target.querySelector("button");
-        
-            const dialogue = dialogueInput.value.trim();
-            if (!dialogue) return;
-        
-            summaryText.innerText = "Processing...";
-            submitButton.disabled = true;
-        
-            try {
-                const response = await fetch("/summarize/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ dialogue }),
-                });
-        
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
-        
-                const data = await response.json();
-                summaryText.innerText = data.summary || "No summary returned.";
-            } catch (err) {
-                
-                summaryText.innerText = `Error: ${err.message}`;
-            } finally {
-                
-                submitButton.disabled = false;
+</div>
+
+<script>
+    const summaryBox = document.getElementById("summary-text");
+
+    // ================= TEXT =================
+    async function summarizeText() {
+        const text = document.getElementById("text-input").value.trim();
+        const mode = document.getElementById("mode").value;
+
+        if (!text) return;
+
+        summaryBox.innerText = "Processing...";
+
+        try {
+            const res = await fetch("/summarize/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ dialogue: text, mode: mode })
+            });
+
+            const data = await res.json();
+            summaryBox.innerText = data.summary || "No summary generated.";
+
+        } catch (err) {
+            summaryBox.innerText = "Error processing text.";
+        }
+    }
+
+    // ================= PDF =================
+    async function summarizePDF() {
+        const fileInput = document.getElementById("pdf-file");
+        const mode = document.getElementById("mode").value;
+
+        if (!fileInput.files.length) return;
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        summaryBox.innerText = "Processing PDF...";
+
+        try {
+            const res = await fetch(`/summarize-pdf/?mode=${mode}`, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                summaryBox.innerText = data.error;
+            } else {
+                summaryBox.innerText = data.summary;
             }
-        });
-    </script>
+
+        } catch (err) {
+            summaryBox.innerText = "Error processing PDF.";
+        }
+    }
+
+    // ================= COPY =================
+    function copyText() {
+        navigator.clipboard.writeText(summaryBox.innerText);
+        alert("Copied!");
+    }
+
+    // ================= DOWNLOAD =================
+    function downloadText() {
+        const blob = new Blob([summaryBox.innerText], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "summary.txt";
+        link.click();
+    }
+</script>
+
 </body>
 </html>
