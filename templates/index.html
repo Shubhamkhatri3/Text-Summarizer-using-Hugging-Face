@@ -41,7 +41,7 @@
             border: 1px solid #ccc;
         }
 
-        select, input[type="file"] {
+        input[type="file"] {
             padding: 8px;
             border-radius: 5px;
             border: 1px solid #ccc;
@@ -92,21 +92,11 @@
     <h1>AI Text Summarizer</h1>
     <h3>Using Hugging Face Transformer</h3>
 
-    <!-- MODE -->
-    <div class="section">
-        <!-- <label><b>Select Summary Type:</b></label>
-        <select id="mode">
-            <option value="short">Short</option>
-            <option value="detailed" selected>Detailed</option>
-            <option value="bullets">Bullet Points</option>
-        </select> -->
-    </div>
-
     <!-- TEXT INPUT -->
     <div class="section">
         <label><b>Enter Text:</b></label>
         <textarea id="text-input" placeholder="Paste your text here..."></textarea>
-        <button onclick="summarizeText()">Summarize Text</button>
+        <button type="button" onclick="summarizeText()">Summarize Text</button>
     </div>
 
     <div class="divider">OR</div>
@@ -115,7 +105,7 @@
     <div class="section">
         <label><b>Upload PDF:</b></label>
         <input type="file" id="pdf-file" accept=".pdf">
-        <button onclick="summarizePDF()">Summarize PDF</button>
+        <button type="button" onclick="summarizePDF()">Summarize PDF</button>
     </div>
 
     <!-- OUTPUT -->
@@ -124,22 +114,25 @@
         <p id="summary-text"></p>
 
         <div class="actions">
-            <button onclick="copyText()">Copy</button>
-            <button onclick="downloadText()">Download</button>
+            <button type="button" onclick="copyText()">Copy</button>
+            <button type="button" onclick="downloadText()">Download</button>
         </div>
     </div>
 
 </div>
 
 <script>
+
     const summaryBox = document.getElementById("summary-text");
 
     // ================= TEXT =================
     async function summarizeText() {
         const text = document.getElementById("text-input").value.trim();
-        const mode = document.getElementById("mode").value;
 
-        if (!text) return;
+        if (!text) {
+            summaryBox.innerText = "Please enter some text.";
+            return;
+        }
 
         summaryBox.innerText = "Processing...";
 
@@ -147,13 +140,14 @@
             const res = await fetch("/summarize/", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ dialogue: text, mode: mode })
+                body: JSON.stringify({ dialogue: text })
             });
 
             const data = await res.json();
             summaryBox.innerText = data.summary || "No summary generated.";
 
         } catch (err) {
+            console.error(err);
             summaryBox.innerText = "Error processing text.";
         }
     }
@@ -161,9 +155,11 @@
     // ================= PDF =================
     async function summarizePDF() {
         const fileInput = document.getElementById("pdf-file");
-        const mode = document.getElementById("mode").value;
 
-        if (!fileInput.files.length) return;
+        if (!fileInput.files.length) {
+            summaryBox.innerText = "Please upload a PDF file.";
+            return;
+        }
 
         const formData = new FormData();
         formData.append("file", fileInput.files[0]);
@@ -171,7 +167,7 @@
         summaryBox.innerText = "Processing PDF...";
 
         try {
-            const res = await fetch(`/summarize-pdf/?mode=${mode}`, {
+            const res = await fetch("/summarize-pdf/", {
                 method: "POST",
                 body: formData
             });
@@ -185,6 +181,7 @@
             }
 
         } catch (err) {
+            console.error(err);
             summaryBox.innerText = "Error processing PDF.";
         }
     }
@@ -203,6 +200,7 @@
         link.download = "summary.txt";
         link.click();
     }
+
 </script>
 
 </body>
